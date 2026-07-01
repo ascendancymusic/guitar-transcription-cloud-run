@@ -19,15 +19,10 @@ import os
 import tempfile
 from pathlib import Path
 
-# Threading optimizations (must be set before any PyTorch imports)
 os.environ.setdefault("OMP_NUM_THREADS", "2")
 os.environ.setdefault("KMP_BLOCKTIME", "1")
 os.environ.setdefault("KMP_AFFINITY", "granularity=fine,compact,1,0")
 
-import torch
-import numpy as np
-import librosa
-import pretty_midi
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.responses import JSONResponse
 
@@ -54,6 +49,7 @@ def load_model():
     """Load model once when container starts."""
     global model, model_loading
     model_loading = True
+    import torch
     from hf_midi_transcription import MidiTranscriptionModel
 
     torch.set_num_threads(2)
@@ -142,6 +138,7 @@ async def transcribe(file: UploadFile = File(...)):
         # AUDIO CONVERSION
         # -------------------------
         import subprocess
+        import librosa
 
         wav_path = input_path + ".wav"
 
@@ -171,12 +168,16 @@ async def transcribe(file: UploadFile = File(...)):
         # -------------------------
         # TRANSCRIPTION
         # -------------------------
+        import torch
+
         with torch.inference_mode():
             model.transcribe_audio_array(audio, midi_path)
 
         # -------------------------
         # MIDI PARSING
         # -------------------------
+        import pretty_midi
+
         pm = pretty_midi.PrettyMIDI(midi_path)
 
         notes = []
