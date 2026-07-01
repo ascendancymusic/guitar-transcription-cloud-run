@@ -1,5 +1,6 @@
 fastapi==0.115.0
 uvicorn[standard]==0.30.0
+python-multipart
 librosa>=0.10.0
 numpy<2
 pretty_midi
