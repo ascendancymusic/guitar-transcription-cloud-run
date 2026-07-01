@@ -1,0 +1,10 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.0
+librosa>=0.10.0
+numpy<2
+pretty_midi
+soundfile
+huggingface-hub>=0.20.0
+safetensors
+torch>=2.2.0 --index-url https://download.pytorch.org/whl/cpu
+git+https://github.com/xavriley/hf_midi_transcription.git
