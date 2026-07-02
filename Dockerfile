@@ -23,6 +23,9 @@ RUN python download_model.py
 # Copy application code
 COPY main.py .
 
+# Unbuffered stdout/stderr for Cloud Run logging
+ENV PYTHONUNBUFFERED=1
+
 # Set environment variables for PyTorch optimization
 ENV OMP_NUM_THREADS=2
 ENV KMP_BLOCKTIME=1
