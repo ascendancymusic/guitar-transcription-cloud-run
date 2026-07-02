@@ -35,8 +35,9 @@ from fastapi.responses import JSONResponse
 @asynccontextmanager
 async def lifespan(app):
     import threading
-    print("Startup event fired, starting model load...")
-    threading.Thread(target=load_model, daemon=True).start()
+    print("Startup: loading model synchronously...")
+    load_model()
+    print("Startup: model loaded, server ready.")
     yield
 
 app = FastAPI(title="Guitar Transcription API", lifespan=lifespan)
@@ -57,7 +58,7 @@ def load_model():
     """Load model once when container starts."""
     global model, model_loading
     model_loading = True
-    print("load_model thread started")
+    print("load_model: importing dependencies...")
     try:
         import torch
         from hf_midi_transcription import MidiTranscriptionModel
@@ -67,7 +68,7 @@ def load_model():
         if not Path(MODEL_FILE_PATH).exists():
             raise RuntimeError(f"Model missing: {MODEL_FILE_PATH}")
 
-        print("Loading guitar model...")
+        print("load_model: loading guitar model...")
         model = MidiTranscriptionModel(
             instrument="guitar",
             checkpoint_path=MODEL_FILE_PATH,
@@ -79,6 +80,7 @@ def load_model():
     except Exception as e:
         model_loading = False
         print(f"Failed to load model: {e}")
+        raise
 
 
 # =========================
