@@ -18,6 +18,7 @@ Deploy: gcloud run deploy guitar-transcription --source . --memory 8Gi --cpu 2 -
 import os
 import tempfile
 from pathlib import Path
+from contextlib import asynccontextmanager
 
 os.environ.setdefault("OMP_NUM_THREADS", "2")
 os.environ.setdefault("KMP_BLOCKTIME", "1")
@@ -31,7 +32,14 @@ from fastapi.responses import JSONResponse
 # APP CONFIG
 # =========================
 
-app = FastAPI(title="Guitar Transcription API")
+@asynccontextmanager
+async def lifespan(app):
+    import threading
+    print("Startup event fired, starting model load...")
+    threading.Thread(target=load_model, daemon=True).start()
+    yield
+
+app = FastAPI(title="Guitar Transcription API", lifespan=lifespan)
 
 MODEL_DIR = "/models"
 MODEL_FILE_PATH = f"{MODEL_DIR}/guitar-gaps.pth"
@@ -49,6 +57,7 @@ def load_model():
     """Load model once when container starts."""
     global model, model_loading
     model_loading = True
+    print("load_model thread started")
     try:
         import torch
         from hf_midi_transcription import MidiTranscriptionModel
@@ -70,13 +79,6 @@ def load_model():
     except Exception as e:
         model_loading = False
         print(f"Failed to load model: {e}")
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Load model in background after server starts listening."""
-    import threading
-    threading.Thread(target=load_model, daemon=True).start()
 
 
 # =========================
