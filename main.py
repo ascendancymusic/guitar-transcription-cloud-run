@@ -23,7 +23,7 @@ os.environ.setdefault("OMP_NUM_THREADS", "2")
 os.environ.setdefault("KMP_BLOCKTIME", "1")
 os.environ.setdefault("KMP_AFFINITY", "granularity=fine,compact,1,0")
 
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, Request
 from fastapi.responses import JSONResponse
 
 
@@ -100,7 +100,7 @@ async def health():
 # =========================
 
 @app.post("/transcribe")
-async def transcribe(file: UploadFile = File(...)):
+async def transcribe(request: Request, file: UploadFile = File(...)):
     """
     Upload audio file (mp3/wav/ogg/etc)
     Returns guitar note events (polyphonic).
@@ -112,7 +112,7 @@ async def transcribe(file: UploadFile = File(...)):
     # -------------------------
     expected = os.environ.get("CLOUD_RUN_API")
     if expected:
-        auth = file.headers.get("Authorization", "") if hasattr(file, "headers") else ""
+        auth = request.headers.get("Authorization", "")
         token = auth.replace("Bearer ", "") if auth.startswith("Bearer ") else ""
         if token != expected:
             raise HTTPException(status_code=401, detail="Unauthorized")
