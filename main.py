@@ -49,23 +49,27 @@ def load_model():
     """Load model once when container starts."""
     global model, model_loading
     model_loading = True
-    import torch
-    from hf_midi_transcription import MidiTranscriptionModel
+    try:
+        import torch
+        from hf_midi_transcription import MidiTranscriptionModel
 
-    torch.set_num_threads(2)
+        torch.set_num_threads(2)
 
-    if not Path(MODEL_FILE_PATH).exists():
-        raise RuntimeError(f"Model missing: {MODEL_FILE_PATH}")
+        if not Path(MODEL_FILE_PATH).exists():
+            raise RuntimeError(f"Model missing: {MODEL_FILE_PATH}")
 
-    print("Loading guitar model...")
-    model = MidiTranscriptionModel(
-        instrument="guitar",
-        checkpoint_path=MODEL_FILE_PATH,
-        device="cpu",
-        batch_size=8,
-    )
-    model_loading = False
-    print("Guitar model ready on CPU.")
+        print("Loading guitar model...")
+        model = MidiTranscriptionModel(
+            instrument="guitar",
+            checkpoint_path=MODEL_FILE_PATH,
+            device="cpu",
+            batch_size=8,
+        )
+        model_loading = False
+        print("Guitar model ready on CPU.")
+    except Exception as e:
+        model_loading = False
+        print(f"Failed to load model: {e}")
 
 
 @app.on_event("startup")
